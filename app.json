@@ -27,6 +27,8 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "description": "APK for article aims.",
+    "githubUrl": "https://github.com/AsyaAndKo/behaviour-authentication-project"
   }
 }
