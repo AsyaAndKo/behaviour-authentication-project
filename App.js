@@ -1,16 +1,25 @@
 import React, { useState } from "react";
 import { StyleSheet, Text, View, Button, TextInput } from "react-native";
+import KeyInputActivity from "./Key_activity";
+import TimeCounter from "./TimeCounter";
+
+let timeCounter = new TimeCounter();
+
+let loginActivity = new KeyInputActivity();
+let passwordActivity = new KeyInputActivity();
 
 export default function App() {
   const [countButton, setCountButton] = useState(0);
   const [countScreen, setCountScreen] = useState(0);
   const [swipeTimer, setSwipeTimer] = useState(0);
+  const [log_pass, setLog_Pass] = useState("");
 
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
-  const [text, setText] = useState("");
 
-  let start, end;
+  let start,
+    end,
+    endAll = 0;
 
   const styles = StyleSheet.create({
     default: {
@@ -37,14 +46,22 @@ export default function App() {
   });
 
   let logPlusPass = [];
+
   const signIn = () => {
+    endAll = new Date().getTime();
+    let loginAndPasswordTime =
+      (endAll - timeCounter.timerValues["LoginFocus"]) / 1000;
+    timeCounter.timerValues["LoginPasswordEnter"] = loginAndPasswordTime;
+    timeCounter.data_pack["LoginPasswordEnter"] = loginAndPasswordTime;
     if (login == undefined || password == undefined) {
-      setText(" ");
+      setLog_Pass(" ");
     } else {
       logPlusPass.push(login);
       logPlusPass.push(password);
-      setText(`Email: ${logPlusPass[0]} \nPassword: ${logPlusPass[1]}`);
     }
+    console.log(JSON.stringify(timeCounter.data_pack));
+    setLogin("");
+    setPassword("");
   };
 
   return (
@@ -63,15 +80,48 @@ export default function App() {
       <TextInput
         style={styles.entrySpace}
         placeholder="Login"
-        onChangeText={(login) => setLogin(login)}
+        value={login}
+        onChangeText={(text) => {
+          loginActivity.onTextChange(text, login, "Login");
+          setLogin(text);
+          timeCounter.data_pack[
+            "LoginSymbPerSec"
+          ] = loginActivity.printSymbolsPerSecond();
+          timeCounter.data_pack["LoginBackSpace"] = loginActivity.saveBackSpace;
+        }}
+        onFocus={(smth) => {
+          timeCounter.onTextFocus("Login");
+        }}
+        onBlur={() => {
+          timeCounter.onTextBlur("Login");
+        }}
       />
       <TextInput
         style={styles.entrySpace}
         placeholder="Password"
-        onChangeText={(password) => setPassword(password)}
+        value={password}
+        onChangeText={(text) => {
+          passwordActivity.onTextChange(text, password, "Password");
+          setPassword(text);
+          timeCounter.data_pack[
+            "PasswordSymbPerSec"
+          ] = passwordActivity.printSymbolsPerSecond();
+          timeCounter.data_pack["PasswordBackSpace"] =
+            passwordActivity.saveBackSpace;
+        }}
+        onFocus={(smth) => {
+          timeCounter.onTextFocus("Password");
+        }}
+        onBlur={() => {
+          timeCounter.onTextBlur("Password");
+        }}
       />
       <Button title="Sign in" onPress={signIn} />
-      <Text>{text}</Text>
+
+      <Text>SymbPerSec in login {loginActivity.printSymbolsPerSecond()}</Text>
+      <Text>
+        SymbPerSec in password {passwordActivity.printSymbolsPerSecond()}
+      </Text>
 
       <Text>{`\nswipe time: ${swipeTimer}`}</Text>
 
