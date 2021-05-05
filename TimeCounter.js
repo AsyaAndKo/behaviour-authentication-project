@@ -17,12 +17,12 @@ export default class TimeCounter {
       PasswordSymbPerSec: 0,
       LoginBackSpace: 0,
       PasswordBackSpace: 0,
-      AngleXMin: 0,
-      AngleXMax: 0,
-      AngleYMin: 0,
-      AngleYMax: 0,
-      AngleZMin: 0,
-      AngleZMax: 0,
+      AlphaMin: 0,
+      AlphaMax: 0,
+      BettaMin: 0,
+      BettaMax: 0,
+      GammaMin: 0,
+      GammaMax: 0,
     };
   }
 

@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, View, Button, TextInput } from "react-native";
 import KeyInputActivity from "./Key_activity";
 import TimeCounter from "./TimeCounter";
+import Gyroscope from "./Gyroscope";
 
 let timeCounter = new TimeCounter();
 
 let loginActivity = new KeyInputActivity();
 let passwordActivity = new KeyInputActivity();
+let gyroscope = new Gyroscope();
 
 export default function App() {
   const [countButton, setCountButton] = useState(0);
@@ -16,6 +18,12 @@ export default function App() {
 
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+
+  const [gyroscopeData, setGyroscopeData] = useState({
+    alpha: 0,
+    beta: 0,
+    gamma: 0,
+  });
 
   let start,
     end,
@@ -48,6 +56,27 @@ export default function App() {
   let logPlusPass = [];
 
   const signIn = () => {
+    gyroscope.flag = false;
+    console.log(gyroscope.alpha_stack);
+    timeCounter.data_pack["AlphaMax"] = gyroscope.getMaximumAngle(
+      gyroscope.alpha_stack
+    );
+    timeCounter.data_pack["AlphaMin"] = gyroscope.getMinimumAngle(
+      gyroscope.alpha_stack
+    );
+    timeCounter.data_pack["BettaMax"] = gyroscope.getMaximumAngle(
+      gyroscope.betta_stack
+    );
+    timeCounter.data_pack["BettaMin"] = gyroscope.getMinimumAngle(
+      gyroscope.betta_stack
+    );
+    timeCounter.data_pack["GammaMax"] = gyroscope.getMaximumAngle(
+      gyroscope.gamma_stack
+    );
+    timeCounter.data_pack["GammaMin"] = gyroscope.getMinimumAngle(
+      gyroscope.gamma_stack
+    );
+    gyroscope.alpha_stack = [];
     endAll = new Date().getTime();
     let loginAndPasswordTime =
       (endAll - timeCounter.timerValues["LoginFocus"]) / 1000;
@@ -63,6 +92,15 @@ export default function App() {
     setLogin("");
     setPassword("");
   };
+
+  gyroscope._subscribe((gyroscopeNewData) => {
+    setGyroscopeData(gyroscopeNewData.rotation);
+    if (gyroscope.flag) {
+      gyroscope.alpha_stack.push(gyroscope.state.data.alpha);
+      gyroscope.betta_stack.push(gyroscope.state.data.beta);
+      gyroscope.gamma_stack.push(gyroscope.state.data.gamma);
+    }
+  }, 1500);
 
   return (
     <View
@@ -91,6 +129,7 @@ export default function App() {
         }}
         onFocus={(smth) => {
           timeCounter.onTextFocus("Login");
+          gyroscope.flag = true;
         }}
         onBlur={() => {
           timeCounter.onTextBlur("Login");
@@ -111,6 +150,7 @@ export default function App() {
         }}
         onFocus={(smth) => {
           timeCounter.onTextFocus("Password");
+          gyroscope.flag = true;
         }}
         onBlur={() => {
           timeCounter.onTextBlur("Password");
@@ -128,6 +168,12 @@ export default function App() {
       <Text>click on screen: {countScreen}</Text>
 
       <Text>click on Button: {countButton}</Text>
+
+      <Text>
+        x: {gyroscopeData.alpha.toFixed(5)}
+        y: {gyroscopeData.beta.toFixed(5)}
+        z: {gyroscopeData.gamma.toFixed(5)}
+      </Text>
 
       {/* TODO: Change button to touchable opacity, so I'll be able to style it properly */}
       <Button

@@ -1,71 +1,51 @@
-import React, { useState, useEffect } from "react";
-import { Gyroscope } from "expo-sensors";
+import { DeviceMotion } from "expo-sensors";
 
-export default function GyroscopeFunc() {
-  const xUnit = [1, 0, 0];
-  const yUnit = [0, 1, 0];
-  const zUnit = [0, 0, 1];
+export default class GyroscopeClass {
+  constructor() {
+    this.angle = 0;
 
-  let angleX = 0;
-  let angleY = 0;
-  let angleZ = 0;
+    this.state = { data: { alpha: 0, beta: 0, gamma: 0 }, subscription: null };
 
-  const [data, setData] = useState({
-    x: 0,
-    y: 0,
-    z: 0,
-  });
-  const [subscription, setSubscription] = useState(null);
+    this.angle = 0;
 
-  const _slow = () => {
+    this.flag = false;
+
+    this.alpha_stack = [];
+    this.betta_stack = [];
+    this.gamma_stack = [];
+  }
+
+  _slow = () => {
     Gyroscope.setUpdateInterval(1000);
   };
 
-  const _fast = () => {
+  _fast = () => {
     Gyroscope.setUpdateInterval(16);
   };
 
-  const _subscribe = () => {
-    setSubscription(
-      Gyroscope.addListener((gyroscopeData) => {
-        setData(gyroscopeData);
-      })
-    );
+  _subscribe = (_subscriber, _interval) => {
+    this.state = {
+      subscription: DeviceMotion.addListener((gyroscopeData) => {
+        this.state.data = gyroscopeData.rotation;
+        _subscriber(gyroscopeData);
+      }),
+      data: { alpha: 0, beta: 0, gamma: 0 },
+    };
+    DeviceMotion.setUpdateInterval(_interval);
   };
 
-  const _unsubscribe = () => {
+  _unsubscribe = () => {
+    DeviceMotion.removeAllListeners();
+    this.state.data = { alpha: 0, beta: 0, gamma: 0 };
     subscription && subscription.remove();
-    setSubscription(null);
+    this.state.subscription = null;
   };
 
-  useEffect(() => {
-    _subscribe();
-    return () => _unsubscribe();
-  }, []);
+  getMaximumAngle(angle_stack) {
+    return Math.max(...angle_stack).toFixed(5);
+  }
 
-  const { x, y, z } = data;
-
-  const angleCounter = (xCoord, yCoord, zCoord) => {
-    angleX = Math.acos(
-      (xCoord * xUnit[0] + yCoord * xUnit[1] + zCoord * xUnit[2]) /
-        (Math.sqrt(xCoord * xCoord + yCoord * yCoord + zCoord * zCoord) *
-          Math.sqrt(
-            xUnit[0] * xUnit[0] + xUnit[1] * xUnit[1] + xUnit[2] * xUnit[2]
-          ))
-    );
-    angleY = Math.acos(
-      (xCoord * yUnit[0] + yCoord * yUnit[1] + zCoord * yUnit[2]) /
-        (Math.sqrt(xCoord * xCoord + yCoord * yCoord + zCoord * zCoord) *
-          Math.sqrt(
-            yUnit[0] * yUnit[0] + yUnit[1] * yUnit[1] + yUnit[2] * yUnit[2]
-          ))
-    );
-    angleZ = Math.acos(
-      (xCoord * zUnit[0] + yCoord * zUnit[1] + zCoord * zUnit[2]) /
-        (Math.sqrt(xCoord * xCoord + yCoord * yCoord + zCoord * zCoord) *
-          Math.sqrt(
-            zUnit[0] * zUnit[0] + zUnit[1] * zUnit[1] + zUnit[2] * zUnit[2]
-          ))
-    );
-  };
+  getMinimumAngle(angle_stack) {
+    return Math.min(...angle_stack).toFixed(5);
+  }
 }
