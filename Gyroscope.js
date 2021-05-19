@@ -42,10 +42,10 @@ export default class GyroscopeClass {
   };
 
   getMaximumAngle(angle_stack) {
-    return Math.max(...angle_stack).toFixed(5);
+    return parseFloat(((Math.max(...angle_stack) * 180) / Math.PI).toFixed(14));
   }
 
   getMinimumAngle(angle_stack) {
-    return Math.min(...angle_stack).toFixed(5);
+    return parseFloat(((Math.min(...angle_stack) * 180) / Math.PI).toFixed(14));
   }
 }

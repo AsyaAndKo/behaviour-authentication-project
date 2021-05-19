@@ -6,6 +6,8 @@ import Gyroscope from "./Gyroscope";
 
 let timeCounter = new TimeCounter();
 
+let auth_answer = "";
+
 let loginActivity = new KeyInputActivity();
 let passwordActivity = new KeyInputActivity();
 let gyroscope = new Gyroscope();
@@ -55,40 +57,88 @@ export default function App() {
 
   let logPlusPass = [];
 
-  const signIn = () => {
-    gyroscope.flag = false;
-    console.log(gyroscope.alpha_stack);
-    timeCounter.data_pack["AlphaMax"] = gyroscope.getMaximumAngle(
-      gyroscope.alpha_stack
-    );
-    timeCounter.data_pack["AlphaMin"] = gyroscope.getMinimumAngle(
-      gyroscope.alpha_stack
-    );
-    timeCounter.data_pack["BettaMax"] = gyroscope.getMaximumAngle(
-      gyroscope.betta_stack
-    );
-    timeCounter.data_pack["BettaMin"] = gyroscope.getMinimumAngle(
-      gyroscope.betta_stack
-    );
-    timeCounter.data_pack["GammaMax"] = gyroscope.getMaximumAngle(
-      gyroscope.gamma_stack
-    );
-    timeCounter.data_pack["GammaMin"] = gyroscope.getMinimumAngle(
-      gyroscope.gamma_stack
-    );
-    gyroscope.alpha_stack = [];
+  const signIn = async () => {
     endAll = new Date().getTime();
-    let loginAndPasswordTime =
-      (endAll - timeCounter.timerValues["LoginFocus"]) / 1000;
-    timeCounter.timerValues["LoginPasswordEnter"] = loginAndPasswordTime;
-    timeCounter.data_pack["LoginPasswordEnter"] = loginAndPasswordTime;
-    if (login == undefined || password == undefined) {
-      setLog_Pass(" ");
-    } else {
-      logPlusPass.push(login);
-      logPlusPass.push(password);
+
+    login_password_check = {
+      TypeJson: "Authentication",
+      login: login,
+      password: password,
+    };
+    try {
+      fetch("http://172.16.34.61:3000/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(login_password_check),
+      })
+        .then((response) => response.json())
+        .then((json) => {
+          console.log("getJson");
+          auth_answer = json;
+
+          if (auth_answer.check === "Success") {
+            gyroscope.flag = false;
+            timeCounter.data_pack["AlphaMax"] = gyroscope.getMaximumAngle(
+              gyroscope.alpha_stack
+            );
+            timeCounter.data_pack["AlphaMin"] = gyroscope.getMinimumAngle(
+              gyroscope.alpha_stack
+            );
+            timeCounter.data_pack["BettaMax"] = gyroscope.getMaximumAngle(
+              gyroscope.betta_stack
+            );
+            timeCounter.data_pack["BettaMin"] = gyroscope.getMinimumAngle(
+              gyroscope.betta_stack
+            );
+            timeCounter.data_pack["GammaMax"] = gyroscope.getMaximumAngle(
+              gyroscope.gamma_stack
+            );
+            timeCounter.data_pack["GammaMin"] = gyroscope.getMinimumAngle(
+              gyroscope.gamma_stack
+            );
+
+            gyroscope.alpha_stack = [];
+            gyroscope.betta_stack = [];
+            gyroscope.gamma_stack = [];
+
+            let loginAndPasswordTime =
+              (endAll - timeCounter.timerValues["LoginFocus"]) / 1000;
+            timeCounter.timerValues["LoginPasswordEnter"] =
+              loginAndPasswordTime;
+            timeCounter.data_pack["LoginPasswordEnter"] = loginAndPasswordTime;
+
+            if (login == undefined || password == undefined) {
+              setLog_Pass(" ");
+            } else {
+              logPlusPass.push(login);
+              logPlusPass.push(password);
+            }
+            fetch("http://172.16.34.61:3000/", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(timeCounter.data_pack),
+            });
+          } else if (auth_answer.check === "Error") {
+            console.log(auth_answer.value);
+            console.log("Error login!");
+          } else {
+            console.log("Errorrrr");
+          }
+        })
+        .catch((error) => {
+          console.error(
+            "There has been a problem with your fetch operation:",
+            error
+          );
+        });
+    } catch (error) {
+      console.log(error);
     }
-    console.log(JSON.stringify(timeCounter.data_pack));
+
     setLogin("");
     setPassword("");
   };
@@ -122,9 +172,8 @@ export default function App() {
         onChangeText={(text) => {
           loginActivity.onTextChange(text, login, "Login");
           setLogin(text);
-          timeCounter.data_pack[
-            "LoginSymbPerSec"
-          ] = loginActivity.printSymbolsPerSecond();
+          timeCounter.data_pack["LoginSymbPerSec"] =
+            loginActivity.printSymbolsPerSecond();
           timeCounter.data_pack["LoginBackSpace"] = loginActivity.saveBackSpace;
         }}
         onFocus={(smth) => {
@@ -142,9 +191,8 @@ export default function App() {
         onChangeText={(text) => {
           passwordActivity.onTextChange(text, password, "Password");
           setPassword(text);
-          timeCounter.data_pack[
-            "PasswordSymbPerSec"
-          ] = passwordActivity.printSymbolsPerSecond();
+          timeCounter.data_pack["PasswordSymbPerSec"] =
+            passwordActivity.printSymbolsPerSecond();
           timeCounter.data_pack["PasswordBackSpace"] =
             passwordActivity.saveBackSpace;
         }}

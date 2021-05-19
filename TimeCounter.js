@@ -10,6 +10,7 @@ export default class TimeCounter {
       LoginPasswordEnter: 0,
     };
     this.data_pack = {
+      TypeJson: "DataPack",
       LoginEnter: 0,
       PasswordEnter: 0,
       LoginPasswordEnter: 0,

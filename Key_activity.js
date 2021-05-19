@@ -26,7 +26,7 @@ export default class KeyInputActivity {
         (this.textChangeEnd - this.textChangeStart) / 1000;
       this.symbolsPerSecond = (
         this.countKeyPress / this.timeForEightSymbols
-      ).toFixed(8);
+      ).toFixed(14);
       console.log(this.symbolsPerSecond);
       this.countKeyPress = 0;
       this.saveBackSpace = this.countBackSpace;
@@ -37,6 +37,6 @@ export default class KeyInputActivity {
   }
 
   printSymbolsPerSecond() {
-    return this.symbolsPerSecond;
+    return parseFloat(this.symbolsPerSecond);
   }
 }
