@@ -10,20 +10,22 @@ export default class TimeCounter {
       LoginPasswordEnter: 0,
     };
     this.data_pack = {
-      TypeJson: "DataPack",
-      LoginEnter: 0,
-      PasswordEnter: 0,
-      LoginPasswordEnter: 0,
-      LoginSymbPerSec: 0,
-      PasswordSymbPerSec: 0,
-      LoginBackSpace: 0,
-      PasswordBackSpace: 0,
-      AlphaMin: 0,
-      AlphaMax: 0,
-      BettaMin: 0,
-      BettaMax: 0,
-      GammaMin: 0,
-      GammaMax: 0,
+      TypeJson: "",
+      data: {
+        LoginEnter: 0,
+        PasswordEnter: 0,
+        LoginPasswordEnter: 0,
+        LoginSymbPerSec: 0,
+        PasswordSymbPerSec: 0,
+        LoginBackSpace: 0,
+        PasswordBackSpace: 0,
+        AlphaMin: 0,
+        AlphaMax: 0,
+        BettaMin: 0,
+        BettaMax: 0,
+        GammaMin: 0,
+        GammaMax: 0,
+      },
     };
   }
 
@@ -38,6 +40,6 @@ export default class TimeCounter {
     let timeInInput = (timeBlur - timeFocus) / 1000;
     this.timerValues[textID + "Blur"] = timeBlur;
     this.timerValues[textID + "Enter"] = timeInInput;
-    this.data_pack[textID + "Enter"] = this.timerValues[textID + "Enter"];
+    this.data_pack.data[textID + "Enter"] = this.timerValues[textID + "Enter"];
   }
 }

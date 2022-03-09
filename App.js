@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, View, Button, TextInput } from "react-native";
+import { StyleSheet, Text, View, Button, TextInput, Alert } from "react-native";
 import KeyInputActivity from "./Key_activity";
 import TimeCounter from "./TimeCounter";
 import Gyroscope from "./Gyroscope";
@@ -27,9 +27,13 @@ export default function App() {
     gamma: 0,
   });
 
+  const [NNState, setNNState] = useState("");
+  const [credential, setCredential] = useState("");
+
   let start,
     end,
-    endAll = 0;
+    endAll = 0,
+    endAll2 = 0;
 
   const styles = StyleSheet.create({
     default: {
@@ -66,7 +70,7 @@ export default function App() {
       password: password,
     };
     try {
-      fetch("http://172.16.34.61:3000/", {
+      fetch("http://192.168.1.15:3000/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,22 +84,22 @@ export default function App() {
 
           if (auth_answer.check === "Success") {
             gyroscope.flag = false;
-            timeCounter.data_pack["AlphaMax"] = gyroscope.getMaximumAngle(
+            timeCounter.data_pack.data["AlphaMax"] = gyroscope.getMaximumAngle(
               gyroscope.alpha_stack
             );
-            timeCounter.data_pack["AlphaMin"] = gyroscope.getMinimumAngle(
+            timeCounter.data_pack.data["AlphaMin"] = gyroscope.getMinimumAngle(
               gyroscope.alpha_stack
             );
-            timeCounter.data_pack["BettaMax"] = gyroscope.getMaximumAngle(
+            timeCounter.data_pack.data["BettaMax"] = gyroscope.getMaximumAngle(
               gyroscope.betta_stack
             );
-            timeCounter.data_pack["BettaMin"] = gyroscope.getMinimumAngle(
+            timeCounter.data_pack.data["BettaMin"] = gyroscope.getMinimumAngle(
               gyroscope.betta_stack
             );
-            timeCounter.data_pack["GammaMax"] = gyroscope.getMaximumAngle(
+            timeCounter.data_pack.data["GammaMax"] = gyroscope.getMaximumAngle(
               gyroscope.gamma_stack
             );
-            timeCounter.data_pack["GammaMin"] = gyroscope.getMinimumAngle(
+            timeCounter.data_pack.data["GammaMin"] = gyroscope.getMinimumAngle(
               gyroscope.gamma_stack
             );
 
@@ -107,7 +111,9 @@ export default function App() {
               (endAll - timeCounter.timerValues["LoginFocus"]) / 1000;
             timeCounter.timerValues["LoginPasswordEnter"] =
               loginAndPasswordTime;
-            timeCounter.data_pack["LoginPasswordEnter"] = loginAndPasswordTime;
+            timeCounter.data_pack.data["LoginPasswordEnter"] =
+              loginAndPasswordTime;
+            timeCounter.data_pack.TypeJson = "DataPack";
 
             if (login == undefined || password == undefined) {
               setLog_Pass(" ");
@@ -115,7 +121,7 @@ export default function App() {
               logPlusPass.push(login);
               logPlusPass.push(password);
             }
-            fetch("http://172.16.34.61:3000/", {
+            fetch("http://192.168.1.15:3000/", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -123,8 +129,9 @@ export default function App() {
               body: JSON.stringify(timeCounter.data_pack),
             });
           } else if (auth_answer.check === "Error") {
-            console.log(auth_answer.value);
+            setCredential(auth_answer.value);
             console.log("Error login!");
+            showAlert(credential);
           } else {
             console.log("Errorrrr");
           }
@@ -142,6 +149,115 @@ export default function App() {
     setLogin("");
     setPassword("");
   };
+
+  const getNNAnswer = () => {
+    endAll2 = new Date().getTime();
+
+    login_password_check = {
+      TypeJson: "Authentication",
+      login: login,
+      password: password,
+    };
+    try {
+      fetch("http://192.168.1.15:3000/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(login_password_check),
+      })
+        .then((response) => response.json())
+        .then((json) => {
+          auth_answer = json;
+
+          if (auth_answer.check === "Success") {
+            gyroscope.flag = false;
+            timeCounter.data_pack.data["AlphaMax"] = gyroscope.getMaximumAngle(
+              gyroscope.alpha_stack
+            );
+            timeCounter.data_pack.data["AlphaMin"] = gyroscope.getMinimumAngle(
+              gyroscope.alpha_stack
+            );
+            timeCounter.data_pack.data["BettaMax"] = gyroscope.getMaximumAngle(
+              gyroscope.betta_stack
+            );
+            timeCounter.data_pack.data["BettaMin"] = gyroscope.getMinimumAngle(
+              gyroscope.betta_stack
+            );
+            timeCounter.data_pack.data["GammaMax"] = gyroscope.getMaximumAngle(
+              gyroscope.gamma_stack
+            );
+            timeCounter.data_pack.data["GammaMin"] = gyroscope.getMinimumAngle(
+              gyroscope.gamma_stack
+            );
+
+            gyroscope.alpha_stack = [];
+            gyroscope.betta_stack = [];
+            gyroscope.gamma_stack = [];
+
+            let loginAndPasswordTime =
+              (endAll2 - timeCounter.timerValues["LoginFocus"]) / 1000;
+            timeCounter.timerValues["LoginPasswordEnter"] =
+              loginAndPasswordTime;
+            timeCounter.data_pack.data["LoginPasswordEnter"] =
+              loginAndPasswordTime;
+            timeCounter.data_pack.TypeJson = "Get answer";
+
+            if (login == undefined || password == undefined) {
+              setLog_Pass(" ");
+            } else {
+              logPlusPass.push(login);
+              logPlusPass.push(password);
+            }
+            fetch("http://192.168.1.15:3000/", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(timeCounter.data_pack),
+            })
+              .then((response) => response.json())
+              .then((json) => {
+                setNNState(json.response);
+                console.log(json.console);
+              });
+          } else if (auth_answer.check === "Error") {
+            setCredential(auth_answer.value);
+            console.log("Error login!");
+            showAlert(credential);
+          } else {
+            console.log("Errorrrr");
+          }
+        })
+        .catch((error) => {
+          console.error(
+            "There has been a problem with your fetch operation:",
+            error
+          );
+        });
+    } catch (error) {
+      console.log(error);
+    }
+    setLogin("");
+    setPassword("");
+  };
+
+  const showAlert = (cred) =>
+    Alert.alert(
+      "Incorrect credentials.",
+      `${cred} is incorrect.
+Please, try again.`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+      ],
+      {
+        cancelable: true,
+        onDismiss: () => {},
+      }
+    );
 
   gyroscope._subscribe((gyroscopeNewData) => {
     setGyroscopeData(gyroscopeNewData.rotation);
@@ -172,9 +288,10 @@ export default function App() {
         onChangeText={(text) => {
           loginActivity.onTextChange(text, login, "Login");
           setLogin(text);
-          timeCounter.data_pack["LoginSymbPerSec"] =
+          timeCounter.data_pack.data["LoginSymbPerSec"] =
             loginActivity.printSymbolsPerSecond();
-          timeCounter.data_pack["LoginBackSpace"] = loginActivity.saveBackSpace;
+          timeCounter.data_pack.data["LoginBackSpace"] =
+            loginActivity.saveBackSpace;
         }}
         onFocus={(smth) => {
           timeCounter.onTextFocus("Login");
@@ -191,9 +308,9 @@ export default function App() {
         onChangeText={(text) => {
           passwordActivity.onTextChange(text, password, "Password");
           setPassword(text);
-          timeCounter.data_pack["PasswordSymbPerSec"] =
+          timeCounter.data_pack.data["PasswordSymbPerSec"] =
             passwordActivity.printSymbolsPerSecond();
-          timeCounter.data_pack["PasswordBackSpace"] =
+          timeCounter.data_pack.data["PasswordBackSpace"] =
             passwordActivity.saveBackSpace;
         }}
         onFocus={(smth) => {
@@ -204,18 +321,7 @@ export default function App() {
           timeCounter.onTextBlur("Password");
         }}
       />
-      <Button title="Sign in" onPress={signIn} />
-
-      <Text>SymbPerSec in login {loginActivity.printSymbolsPerSecond()}</Text>
-      <Text>
-        SymbPerSec in password {passwordActivity.printSymbolsPerSecond()}
-      </Text>
-
-      <Text>{`\nswipe time: ${swipeTimer}`}</Text>
-
-      <Text>click on screen: {countScreen}</Text>
-
-      <Text>click on Button: {countButton}</Text>
+      <Button title="Train Neural network" onPress={signIn} />
 
       <Text>
         x: {gyroscopeData.alpha.toFixed(5)}
@@ -223,11 +329,12 @@ export default function App() {
         z: {gyroscopeData.gamma.toFixed(5)}
       </Text>
 
-      {/* TODO: Change button to touchable opacity, so I'll be able to style it properly */}
+      <Text>{NNState}</Text>
+
       <Button
-        color="#dea4eb"
-        title="Change Text"
-        onPress={() => setCountButton(countButton + 1)}
+        color="#2b7a40"
+        title="Run Neural Network"
+        onPress={getNNAnswer}
       />
     </View>
   );
